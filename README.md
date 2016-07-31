@@ -10,11 +10,12 @@ Suppose you have a poll with two choices, labelled "Choice A" and "Choice B". Th
 const deepUpdate = require("sequelize-deep-update");
 Poll.findById(1, {include: [Choice]})
   .then((poll)=>{
-    console.log(poll.Choices[0].label); // "Choice A"
-    console.log(poll.Choices[1].label); // "Choice B"
+    console.log(poll.title); // "Title A"
+    console.log(poll.choices[0].label); // "Choice A"
+    console.log(poll.choices[1].label); // "Choice B"
     return deepUpdate(poll, {
-      title: 'My new poll title',
-      Choices: [{
+      title: 'Title B',
+      choices: [{
         label: 'Choice A2'
         id: 1,
       }, {
@@ -23,8 +24,9 @@ Poll.findById(1, {include: [Choice]})
     });
   })
   .then((poll)=>{
-    console.log(poll.Choices[0].label); // "Choice A2"
-    console.log(poll.Choices[1].label); // "Choice C"
+    console.log(poll.title); // "Title B"
+    console.log(poll.choices[0].label); // "Choice A2"
+    console.log(poll.choices[1].label); // "Choice C"
   })
 ```
 

@@ -22,6 +22,7 @@ function capitalizeFirst(string) {
 
 module.exports = function deepUpdate(instance, new_attrs){
 
+
   // console.log('model', instance.Model);
 
   // console.log('associationType', instance.Model.associations.choices.associationType);
@@ -37,7 +38,7 @@ module.exports = function deepUpdate(instance, new_attrs){
   // Iterate through all of the associations from this model
   const update_associations = Object.keys(associations).map((associated)=>{
 
-    if(!new_attrs[associated]){
+    if(new_attrs[associated] === undefined){
       return Promise.resolve();
     }
 
@@ -47,13 +48,10 @@ module.exports = function deepUpdate(instance, new_attrs){
     // Retrieve the associated model
     const assoc_model = associations[associated].model;
 
-    // console.log(assoc_model);
+    const primary_key = Object.keys(assoc_model.primaryKeys)[0];
 
     // Determine whether this is a single association (containing one instance) or multi.
     const assoc_type  = instance.Model.associations[associated].associationType;
-    // if(assoc_type === 'HasOne'){
-    //   return Promise.resolve();
-    // }
     const single = {
       HasMany: false,
       HasOne: true,
@@ -61,23 +59,24 @@ module.exports = function deepUpdate(instance, new_attrs){
       BelongsToMany: false
     }[assoc_type];
 
-    // console.log(assoc_type, single);
 
     // Get the name of the prototype function on @instance that will set the associated
     // instances for this association. Seqeulize capitalizes the name of the model.
-    const set_fnc_name = 'set' + capitalizeFirst(single ? assoc_model.options.name.singular : assoc_model.options.name.plural);
-    const add_fnc_name = (single ? 'set' : 'add') + capitalizeFirst(single ? assoc_model.options.name.singular : assoc_model.options.name.plural);
-
-    console.log(set_fnc_name);
+    const set_fnc_name = (assoc.as && ('set' + capitalizeFirst(assoc.as))) || ('set' + capitalizeFirst(single ? assoc_model.options.name.singular : assoc_model.options.name.plural));
+    const add_fnc_name = (assoc.as && (((single && 'set') || 'add') + capitalizeFirst(assoc.as))) || ((single ? 'set' : 'add') + capitalizeFirst(single ? assoc_model.options.name.singular : assoc_model.options.name.plural));
 
     // Remove all existing associated instances for the current key
     // console.log('set fnc name: ', set_fnc_name);
-
     let prom = instance[set_fnc_name](null);
 
 
     // Get the NEW object for that association field, as defined by new_attrs
     let val = new_attrs[associated];
+
+    // If the val is set to null or an empty array, stop acting on this association (i.e. do not re-associate any records)
+    if(val === null || (Array.isArray(val) && val.length === 0)){
+      return prom;
+    }
 
     if(!Array.isArray(val)) val = [val];
 
@@ -85,8 +84,8 @@ module.exports = function deepUpdate(instance, new_attrs){
     const update_instances = val.map((obj)=>{
 
       // If the object has an ID, retrieve it and update it.
-      if(obj.id){
-        prom = prom.then(()=> assoc_model.findById(obj.id)
+      if(obj[primary_key]){
+        prom = prom.then(()=> assoc_model.findById(obj[primary_key])
           .then((result)=>{
             result.set(obj);
             return result.save();

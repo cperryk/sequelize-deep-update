@@ -2,7 +2,7 @@ const assert = require('chai').assert;
 const Sequelize = require('sequelize');
 const deepUpdate = require('./index.js');
 
-const db_name = process.env.NB_NAME || 'test';
+const db_name = process.env.DB_NAME || 'test';
 const db_user = process.env.DB_USER || 'root';
 const db_pass = process.env.DB_PASS || 'root';
 

@@ -31,3 +31,9 @@ Poll.findById(1, {include: [Choice]})
 ## Limitations ##
 
 This has not been tested with scopes.
+
+This will almost definitely need to be refactored for Sequelize 4.0!
+
+## Testing ##
+
+To test, run `npm run test`. The tests expect you to have a local mysql db called `test` with username `root` and password `root`. You can modify this with environment variables `DB_NAME`, `DB_USER`, `DB_PASS`.

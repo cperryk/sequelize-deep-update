@@ -1,0 +1,19 @@
+{
+  "name": "sequelize-deep-update",
+  "version": "1.0.0",
+  "description": "Update a sequelize instance and its included associated instances with new properties.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test.js -d"
+  },
+  "keywords": [
+    "sequelize"
+  ],
+  "author": "Chris Kirk",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mysql": "^2.11.1",
+    "sequelize": "^3.23.6"
+  }
+}

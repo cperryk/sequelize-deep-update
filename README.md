@@ -1,6 +1,8 @@
 # sequelize-deep-update
 
-Update a sequelize instance _and_ its associated records with a single method.
+Update a sequelize instance _and_ its associated records (and their associated records, and so on).
+
+Full disclosure: This is not well battle-tested yet. The function should behave as described; however, it can likely be optimized and may not be suitable for a large-scale production app.
 
 ## Usage ##
 

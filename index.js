@@ -14,6 +14,8 @@
  * 5. Save the instance.
  * 6. Return the updated populated object of this instance.
  */
+
+console.log('what the!');
 const util = require('util');
 
 function capitalizeFirst(string) {
@@ -21,6 +23,8 @@ function capitalizeFirst(string) {
 }
 
 module.exports = function deepUpdate(instance, new_attrs){
+
+  console.log('go');
   // console.log('deep update: ', instance.dataValues, '-----> ', new_attrs);
 
   // Update literals
@@ -30,7 +34,7 @@ module.exports = function deepUpdate(instance, new_attrs){
   const associations = instance.$options.includeMap;
 
   Object.keys(new_attrs).forEach((attr)=>{
-    if(!associations[attr]){
+    if((!associations) || (!associations[attr])){
       instance.set(attr, new_attrs[attr]);
     }
   });

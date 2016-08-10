@@ -24,10 +24,16 @@ module.exports = function deepUpdate(instance, new_attrs){
   // console.log('deep update: ', instance.dataValues, '-----> ', new_attrs);
 
   // Update literals
-  instance.set(new_attrs);
+  // instance.set(new_attrs);
 
   // includeMap is a dictionary of attribute name to Sequelize instance
   const associations = instance.$options.includeMap;
+
+  Object.keys(new_attrs).forEach((attr)=>{
+    if(!associations[attr]){
+      instance.set(attr, new_attrs[attr]);
+    }
+  });
 
   // Iterate through all of the associations from this model
   const update_associations = !associations ? [] : Object.keys(associations).map((associated)=>{
@@ -76,8 +82,12 @@ module.exports = function deepUpdate(instance, new_attrs){
     // For each object in this association key
     const update_instances = val.map((obj)=>{
 
+      if(typeof obj === 'string' || typeof obj === 'number'){
+        prom = prom.then(()=> assoc_model.findById(obj));
+      }
+
       // If the object has an ID, retrieve it and update it.
-      if(obj[primary_key]){
+      else if(obj[primary_key]){
         prom = prom.then(()=> assoc_model.findById(obj[primary_key], {include: [{all: true, nested: true}]})
           .then((result)=>{
             return deepUpdate(result, obj);

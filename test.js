@@ -1,44 +1,46 @@
 const assert = require('chai').assert;
 const Sequelize = require('sequelize');
 const deepUpdate = require('./index.js');
+const util = require('util');
 
 const db_name = process.env.DB_NAME || 'test';
 const db_user = process.env.DB_USER || 'root';
 const db_pass = process.env.DB_PASS || 'root';
 
+const sequelize = new Sequelize('test', 'root', 'root', {
+  logging: false
+});
+const Poll = sequelize.define('poll', {
+  title: Sequelize.STRING,
+  sub: Sequelize.STRING
+});
+const Choice = sequelize.define('choice', {
+  label: Sequelize.STRING
+});
+const Article = sequelize.define('article', {
+  headline: Sequelize.STRING
+});
+const Thumb = sequelize.define('thumb', {
+  src: Sequelize.STRING
+});
+const Gallery = sequelize.define('galleries', {
+  title: Sequelize.STRING
+});
+const Tag = sequelize.define('tag', {
+  name: Sequelize.STRING
+});
+
+Poll.hasMany(Choice);
+Poll.hasOne(Thumb);
+Poll.belongsTo(Article);
+Poll.belongsToMany(Gallery, {through: 'gallery'});
+Gallery.hasMany(Tag);
+
+
 describe('Test relationships', function(done){
   let poll;
 
   before(function(done){
-
-    const sequelize = new Sequelize('test', 'root', 'root', {
-      logging: false
-    });
-    const Poll = sequelize.define('poll', {
-      title: Sequelize.STRING,
-      sub: Sequelize.STRING
-    });
-    const Choice = sequelize.define('choice', {
-      label: Sequelize.STRING
-    });
-    const Article = sequelize.define('article', {
-      headline: Sequelize.STRING
-    });
-    const Thumb = sequelize.define('thumb', {
-      src: Sequelize.STRING
-    });
-    const Gallery = sequelize.define('galleries', {
-      title: Sequelize.STRING
-    });
-    const Tag = sequelize.define('tag', {
-      name: Sequelize.STRING
-    });
-
-    Poll.hasMany(Choice);
-    Poll.hasOne(Thumb);
-    Poll.belongsTo(Article);
-    Poll.belongsToMany(Gallery, {through: 'gallery'});
-    Gallery.hasMany(Tag);
 
     sequelize.sync({
       force: true
@@ -129,6 +131,23 @@ describe('Test relationships', function(done){
       })
       .catch(done);
     });
+    it('If a string or number is passed to an association key, associate with the instance of that ID.', function(done){
+      let new_choice_id;
+      Choice.create({
+        label: 'Choice D'
+      })
+      .then((choice)=>{
+        new_choice_id = choice.id;
+        return deepUpdate(poll, {
+          choices: [new_choice_id]
+        });
+      })
+      .then((poll)=>{
+        assert.equal(poll.choices[0].id, new_choice_id);
+        assert.equal(poll.choices[0].label, 'Choice D');
+        done();
+      });
+    });
 
   });
 
@@ -149,7 +168,7 @@ describe('Test relationships', function(done){
       })
       .catch(done);
     });
-    it('Should create a new record if an ID is included', function(done){
+    it('Should create a new record if an ID is not included', function(done){
       let article_id = poll.article.id;
       deepUpdate(poll, {
         article: {
@@ -159,6 +178,23 @@ describe('Test relationships', function(done){
       .then((poll)=>{
         assert.notEqual(poll.article.id, article_id);
         assert.equal(poll.article.headline, 'Headline B');
+        done();
+      })
+      .catch(done);
+    });
+    it('Should associate to an existing object if an string or number is passed', function(done){
+      let new_article_id;
+      Article.create({
+        headline: 'Headline C'
+      })
+      .then((article)=>{
+        new_article_id = article.id;
+        return deepUpdate(poll, {
+          article: article.id
+        });
+      })
+      .then((poll)=>{
+        assert.equal(poll.article.id, new_article_id);
         done();
       })
       .catch(done);
@@ -216,6 +252,25 @@ describe('Test relationships', function(done){
           done();
         })
         .catch(done);
+    });
+
+    it('If a string or number is passed to an association field, should associate to the instance with that ID', function(done){
+      let new_thumb_id;
+      Thumb.create({
+        src: 'thumbD.jpg'
+      })
+      .then((thumb)=>{
+        new_thumb_id = thumb.id;
+        return deepUpdate(poll, {
+          thumb: new_thumb_id
+        });
+      })
+      .then((poll)=>{
+        assert.equal(poll.thumb.id, new_thumb_id);
+        assert.equal(poll.thumb.src, 'thumbD.jpg');
+        done();
+      })
+      .catch(done);
     });
   });
 
@@ -312,4 +367,5 @@ describe('Test relationships', function(done){
       .catch(done);
     });
   });
+
 });

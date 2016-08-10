@@ -30,11 +30,15 @@ describe('Test relationships', function(done){
     const Gallery = sequelize.define('galleries', {
       title: Sequelize.STRING
     });
+    const Tag = sequelize.define('tag', {
+      name: Sequelize.STRING
+    });
 
     Poll.hasMany(Choice);
     Poll.hasOne(Thumb);
     Poll.belongsTo(Article);
     Poll.belongsToMany(Gallery, {through: 'gallery'});
+    Gallery.hasMany(Tag);
 
     sequelize.sync({
       force: true
@@ -57,7 +61,7 @@ describe('Test relationships', function(done){
           {title: 'Gallery A'},
           {title: 'Gallery B'}
         ]
-      }, {include: [{all: true}]});
+      }, {include: [{all: true, nested: true}]});
     })
     .then((result)=>{
       poll = result;
@@ -257,4 +261,55 @@ describe('Test relationships', function(done){
     });
   });
 
+  describe('Sub-association tests', function(){
+    let gallery_id;
+    it('Should create new sub-associations', function(done){
+      deepUpdate(poll, {
+        galleries: [{
+          title: 'Gallery D',
+          tags: [{
+            name: 'Tag A'
+          }]
+        }]
+      })
+      .then((poll)=>{
+        assert.isArray(poll.galleries[0].tags);
+        assert.equal(poll.galleries[0].tags.length, 1);
+        assert.equal(poll.galleries[0].tags[0].name, 'Tag A');
+        gallery_id = poll.galleries[0].id;
+        done();
+      })
+      .catch(done);
+    });
+    it('Should update sub-associations', function(done){
+      deepUpdate(poll, {
+        galleries: [{
+          id: gallery_id,
+          tags: [{
+            name: 'Tag B'
+          }]
+        }]
+      })
+      .then((poll)=>{
+        assert.isArray(poll.galleries[0].tags);
+        assert.equal(poll.galleries[0].tags.length, 1);
+        assert.equal(poll.galleries[0].tags[0].name, 'Tag B');
+        done();
+      })
+      .catch(done);
+    });
+    it('Should delete sub-associations', function(done){
+      deepUpdate(poll, {
+        galleries: [{
+          id: gallery_id,
+          tags: []
+        }]
+      })
+      .then((poll)=>{
+        assert.equal(poll.galleries[0].tags.length, 0);
+        done();
+      })
+      .catch(done);
+    });
+  });
 });

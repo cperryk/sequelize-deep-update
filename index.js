@@ -21,14 +21,16 @@ function capitalizeFirst(string) {
 }
 
 module.exports = function deepUpdate(instance, new_attrs){
+  // console.log('deep update: ', instance.dataValues, '-----> ', new_attrs);
 
+  // Update literals
   instance.set(new_attrs);
 
   // includeMap is a dictionary of attribute name to Sequelize instance
   const associations = instance.$options.includeMap;
 
   // Iterate through all of the associations from this model
-  const update_associations = Object.keys(associations).map((associated)=>{
+  const update_associations = !associations ? [] : Object.keys(associations).map((associated)=>{
 
     if(new_attrs[associated] === undefined){
       return Promise.resolve();
@@ -76,15 +78,14 @@ module.exports = function deepUpdate(instance, new_attrs){
 
       // If the object has an ID, retrieve it and update it.
       if(obj[primary_key]){
-        prom = prom.then(()=> assoc_model.findById(obj[primary_key])
+        prom = prom.then(()=> assoc_model.findById(obj[primary_key], {include: [{all: true, nested: true}]})
           .then((result)=>{
-            result.set(obj);
-            return result.save();
+            return deepUpdate(result, obj);
           }));
       }
       // If the object does not have an ID, it's new, so create it.
       else{
-        prom = prom.then(()=> assoc_model.create(obj));
+        prom = prom.then(()=> assoc_model.create(obj, {include: [{all: true}]}));
       }
       // Associate everything again.
       return prom
@@ -101,8 +102,13 @@ module.exports = function deepUpdate(instance, new_attrs){
     return Promise.all(update_instances);
 
   });
+
   return Promise.all(update_associations)
     .then(()=> instance.save())
     .then(()=> instance.reload())
+    .then(()=>{
+      // console.log('result', util.inspect(instance.dataValues, {depth: 2, colors: true}));
+      return instance;
+    })
     .catch((err)=> console.log(err));
 };

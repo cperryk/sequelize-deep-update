@@ -22,18 +22,10 @@ function capitalizeFirst(string) {
 
 module.exports = function deepUpdate(instance, new_attrs){
 
-
-  // console.log('model', instance.Model);
-
-  // console.log('associationType', instance.Model.associations.choices.associationType);
+  instance.set(new_attrs);
 
   // includeMap is a dictionary of attribute name to Sequelize instance
   const associations = instance.$options.includeMap;
-
-  // console.log(associations);
-
-  // Update all of the attributes of the root instance
-  // instance.set(new_attrs);
 
   // Iterate through all of the associations from this model
   const update_associations = Object.keys(associations).map((associated)=>{
@@ -66,7 +58,6 @@ module.exports = function deepUpdate(instance, new_attrs){
     const add_fnc_name = (assoc.as && (((single && 'set') || 'add') + capitalizeFirst(assoc.as))) || ((single ? 'set' : 'add') + capitalizeFirst(single ? assoc_model.options.name.singular : assoc_model.options.name.plural));
 
     // Remove all existing associated instances for the current key
-    // console.log('set fnc name: ', set_fnc_name);
     let prom = instance[set_fnc_name](null);
 
 

@@ -15,7 +15,8 @@ describe('Test relationships', function(done){
       logging: false
     });
     const Poll = sequelize.define('poll', {
-      title: Sequelize.STRING
+      title: Sequelize.STRING,
+      sub: Sequelize.STRING
     });
     const Choice = sequelize.define('choice', {
       label: Sequelize.STRING
@@ -41,6 +42,7 @@ describe('Test relationships', function(done){
     .then(()=>{
       return Poll.create({
         title: "Test poll",
+        sub: "Test sub",
         choices: [ // for hasMany
           {label: 'Choice A'},
           {label: 'Choice B'}
@@ -62,6 +64,19 @@ describe('Test relationships', function(done){
       done();
     })
     .catch(done);
+  });
+
+  describe('Basic update tests', function(){
+    it('Should update any literals', function(){
+      return deepUpdate(poll, {
+        title: "Test poll B",
+        sub: "Test sub B"
+      })
+      .then((poll)=>{
+        assert.equal(poll.title, "Test poll B");
+        assert.equal(poll.sub, "Test sub B");
+      });
+    });
   });
 
   describe('hasMany tests', function(){

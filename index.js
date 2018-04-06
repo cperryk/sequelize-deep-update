@@ -15,7 +15,6 @@
  * 6. Return the updated populated object of this instance.
  */
 
-console.log('what the!');
 const util = require('util');
 
 function capitalizeFirst(string) {
